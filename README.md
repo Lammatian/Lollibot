@@ -1,2 +1,2 @@
-# Group12
+# Lollibot
 Assistive Robot
