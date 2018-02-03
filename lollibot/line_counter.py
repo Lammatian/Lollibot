@@ -2,7 +2,7 @@ WHITE_THRESHOLD = 0.4
 SMOOTHING_FACTOR = 5
 
 
-class LineCounter:
+class LineCounter(object):
     def __init__(self):
         self.max_input = (1020, 1020, 1020)
         self.previous_inputs = []
@@ -21,7 +21,7 @@ class LineCounter:
         start_index = end_index - SMOOTHING_FACTOR
 
         values = self.previous_inputs[start_index:end_index]
-        values_binary = map(lambda v: sum(v)/3 >= WHITE_THRESHOLD, values)
+        values_binary = [sum(v)/3 >= WHITE_THRESHOLD for v in values]
 
         most_common = sum(values_binary) > (SMOOTHING_FACTOR / 2)
 
@@ -33,7 +33,7 @@ class LineCounter:
     def count_lines(self):
         last_value = False
         switches = 0
-        for i in range(1,len(self.previous_inputs)):
+        for i in range(1, len(self.previous_inputs)):
             new_value = self.smoothed_input(i)
             if new_value and not last_value:
                 switches += 1
