@@ -10,7 +10,7 @@ class LineCounter(object):
     def calibrate(self, white_input):
         self.max_input = white_input
 
-    def input(self, value):
+    def register_input(self, value):
         scaled_value = tuple(map(lambda r, s: r / s, value, self.max_input))
         value_binary = sum(scaled_value) / 3 >= WHITE_THRESHOLD
         self.previous_inputs.append(value_binary)

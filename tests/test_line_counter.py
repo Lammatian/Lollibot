@@ -5,8 +5,8 @@ from random import randrange
 
 def input_measurements(lc, count, min_val, max_val):
     for _ in range(count):
-        input = tuple([randrange(min_val, max_val) for _ in range(3)])
-        lc.input(input)
+        sensor_input = tuple([randrange(min_val, max_val) for _ in range(3)])
+        lc.register_input(sensor_input)
 
 
 def test_calibrate():
