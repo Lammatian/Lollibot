@@ -4,7 +4,7 @@ init:
 	pip install -r requirements.txt
 
 lint:
-	pylint lollibot
+	pylint -E lollibot
 
 test: lint
 	python -m pytest
