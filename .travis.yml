@@ -2,6 +2,6 @@ language: python
 python:
   - "3.4"
 install:
-  - make install
+  - make init
 script:
   - make test
