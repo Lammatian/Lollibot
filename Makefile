@@ -1,10 +1,10 @@
 .PHONY: init lint test
 
 init:
-    pip install -r requirements.txt
+	pip install -r requirements.txt
 
 lint:
-    pylint -E lollibot
+	pylint -E lollibot
 
 test: lint
-    python -m pytest
+	python -m pytest
