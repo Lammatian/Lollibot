@@ -19,7 +19,7 @@ class MovementControl(object):
 
         while self.lc.count_lines() < line_count:
             self.main_motors.move(direction)
-            time.sleep(0.05)
+            time.sleep(0)
             sensor_value = self.color_sensor.get_value()
             self.lc.register_input(sensor_value)
             print("{} {}".format(sensor_value, self.lc.count_lines()))
