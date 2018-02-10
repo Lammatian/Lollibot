@@ -1,11 +1,11 @@
 import pytest
-from lollibot.line_counter import LineCounter
+from lollibot.movement.line_counter import LineCounter
 from random import randrange
 
 
 def input_measurements(lc, count, min_val, max_val):
     for _ in range(count):
-        sensor_input = tuple([randrange(min_val, max_val) for _ in range(3)])
+        sensor_input = randrange(min_val, max_val)
         lc.register_input(sensor_input)
 
 
@@ -14,14 +14,14 @@ def test_calibrate():
     input_measurements(lc, 5, 0, 25)
     assert lc.last_value() == False
 
-    lc.calibrate((150, 170, 130))
+    lc.calibrate(160)
     input_measurements(lc, 5, 80, 150)
     assert lc.last_value() == True
 
 
 def test_smooth():
     lc = LineCounter()
-    lc.calibrate((600, 600, 600))
+    lc.calibrate(600)
 
     input_measurements(lc, 8, 30, 50)
     assert lc.last_value() == False
@@ -37,18 +37,18 @@ def test_smooth():
 
 def test_one_line():
     lc = LineCounter()
-    lc.calibrate((600, 600, 600))
+    lc.calibrate(600)
 
-    input_measurements(lc, 8, 30, 50) # black
-    input_measurements(lc, 15, 350, 380) # white
-    input_measurements(lc, 8, 80, 100) # black
+    input_measurements(lc, 8, 30, 50)  # black
+    input_measurements(lc, 15, 350, 380)  # white
+    input_measurements(lc, 8, 80, 100)  # black
 
     assert lc.count_lines() == 1
 
 
 def test_two_lines():
     lc = LineCounter()
-    lc.calibrate((600, 600, 600))
+    lc.calibrate(600)
 
     input_measurements(lc, 8, 30, 50)  # black
     input_measurements(lc, 15, 350, 380)  # white
@@ -58,3 +58,22 @@ def test_two_lines():
     assert lc.count_lines() == 2
 
 
+def test_reset():
+    lc = LineCounter()
+    lc.calibrate(600)
+
+    input_measurements(lc, 8, 30, 50)  # black
+    input_measurements(lc, 15, 350, 380)  # white
+    input_measurements(lc, 8, 80, 100)  # black
+
+    assert lc.count_lines() == 1
+
+    lc.reset()
+
+    assert lc.count_lines() == 0
+
+    input_measurements(lc, 8, 30, 50)  # black
+    input_measurements(lc, 15, 350, 380)  # white
+    input_measurements(lc, 8, 80, 100)  # black
+
+    assert lc.count_lines() == 1

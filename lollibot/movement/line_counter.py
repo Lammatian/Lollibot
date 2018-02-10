@@ -4,22 +4,32 @@ SMOOTHING_FACTOR = 5
 
 class LineCounter(object):
     def __init__(self):
-        self.max_input = (1020, 1020, 1020)
+        self.max_input = 100
+        self.line_count = 0
+        self.previous_inputs = []
+
+    def reset(self):
+        self.line_count = 0
         self.previous_inputs = []
 
     def calibrate(self, white_input):
         self.max_input = white_input
 
     def register_input(self, value):
-        scaled_value = tuple(map(lambda r, s: r / s, value, self.max_input))
-        value_binary = sum(scaled_value) / 3 >= WHITE_THRESHOLD
+        scaled_value = value / self.max_input
+        value_binary = scaled_value >= WHITE_THRESHOLD
         self.previous_inputs.append(value_binary)
 
+        last_value = self.__smoothed_input(len(self.previous_inputs) - 1)
+        cur_value = self.__smoothed_input(len(self.previous_inputs))
+        if cur_value and not last_value:
+            self.line_count += 1
+
     def __smoothed_input(self, end_index):
-        if end_index < SMOOTHING_FACTOR:
+        if end_index == 0:
             return False
 
-        start_index = end_index - SMOOTHING_FACTOR
+        start_index = max(end_index - SMOOTHING_FACTOR, 0)
 
         values = self.previous_inputs[start_index:end_index]
 
@@ -31,13 +41,4 @@ class LineCounter(object):
         return self.__smoothed_input(len(self.previous_inputs))
 
     def count_lines(self):
-        last_value = False
-        switches = 0
-        for i in range(1, len(self.previous_inputs)):
-            new_value = self.__smoothed_input(i)
-            if new_value and not last_value:
-                switches += 1
-
-            last_value = new_value
-
-        return switches
+        return self.line_count
