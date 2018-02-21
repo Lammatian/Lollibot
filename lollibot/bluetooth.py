@@ -58,7 +58,7 @@ class BluetoothCommunicator:
 
 
     def receive_data(self):
-        logger.info("Getting received data")
+        logger.info("Receiving data")
         data = self.client_sock.recv(1024)
 
         if not data:
@@ -69,3 +69,9 @@ class BluetoothCommunicator:
         logger.debug("Received {}".format(decoded_data))
         
         return decoded_data
+
+    
+    def send_data(self, data):
+        logger.debug("Sending {} to the client".format(data))
+        self.client_sock.send(bytes(data, "utf-8"))
+        logger.info("Data successfully sent")
