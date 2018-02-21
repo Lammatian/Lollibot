@@ -73,5 +73,5 @@ class BluetoothCommunicator:
     
     def send_data(self, data):
         logger.debug("Sending {} to the client".format(data))
-        self.client_sock.send(bytes(data, "utf-8"))
+        self.client_sock.send(data)
         logger.info("Data successfully sent")
