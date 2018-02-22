@@ -14,13 +14,13 @@ class MovementControl(object):
     def move_lines(self, line_count, direction=1):
         self.lc.reset()
 
-        sensor_value = self.color_sensor.get_value()
+        sensor_value = self.color_sensor.value()
         self.lc.register_input(sensor_value)
 
         while self.lc.count_lines() < line_count:
             self.main_motors.move(direction)
             time.sleep(0)
-            sensor_value = self.color_sensor.get_value()
+            sensor_value = self.color_sensor.value()
             self.lc.register_input(sensor_value)
             print("{} {}".format(sensor_value, self.lc.count_lines()))
 

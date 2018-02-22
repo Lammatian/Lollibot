@@ -1,5 +1,4 @@
-WHITE_THRESHOLD = 0.4
-SMOOTHING_FACTOR = 5
+from config import LINE_COUNTER_SMOOTHING_FACTOR, COLOR_SENSOR_WHITE_THRESHOLD
 
 
 class LineCounter(object):
@@ -17,7 +16,7 @@ class LineCounter(object):
 
     def register_input(self, value):
         scaled_value = value / self.max_input
-        value_binary = scaled_value >= WHITE_THRESHOLD
+        value_binary = scaled_value >= COLOR_SENSOR_WHITE_THRESHOLD
         self.previous_inputs.append(value_binary)
 
         last_value = self.__smoothed_input(len(self.previous_inputs) - 1)
@@ -29,11 +28,11 @@ class LineCounter(object):
         if end_index == 0:
             return False
 
-        start_index = max(end_index - SMOOTHING_FACTOR, 0)
+        start_index = max(end_index - LINE_COUNTER_SMOOTHING_FACTOR, 0)
 
         values = self.previous_inputs[start_index:end_index]
 
-        most_common = sum(values) > (SMOOTHING_FACTOR / 2)
+        most_common = sum(values) > (LINE_COUNTER_SMOOTHING_FACTOR / 2)
 
         return most_common
 
