@@ -32,7 +32,7 @@ def test_stop_motors(standard_mock):
 
 def test_pass_correct_measurements(standard_mock):
     standard_mock.line_counter.count_lines.side_effect = range(0, 5)
-    standard_mock.line_color_sensor.get_value.return_value = 50
+    standard_mock.line_color_sensor.value.return_value = 50
 
     mc = MovementControl()
     mc.move_lines(3, 1)
@@ -42,7 +42,7 @@ def test_pass_correct_measurements(standard_mock):
 
 def test_move_back(standard_mock):
     standard_mock.line_counter.count_lines.side_effect = range(0, 5)
-    standard_mock.line_color_sensor.get_value.return_value = 50
+    standard_mock.line_color_sensor.value.return_value = 50
 
     mc = MovementControl()
     mc.move_lines(3, 1)
