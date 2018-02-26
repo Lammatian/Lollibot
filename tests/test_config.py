@@ -27,3 +27,30 @@ def test_overwrite(common_mock):
     common_mock.something = 'abc'
 
     assert common_mock.something == 'abc'
+
+
+def test_case_insensitive(common_mock):
+    common_mock.SOMETHING = '123'
+
+    assert common_mock.something == '123'
+    assert common_mock.SOMEthing == '123'
+    assert common_mock.SOMETHING == '123'
+
+
+def test_store_lists(common_mock):
+    array = ['hello', 'world everybody!']
+    common_mock.array = array
+
+    assert common_mock.array == array
+
+
+def test_store_integer(common_mock):
+    common_mock.number = 420
+
+    assert common_mock.number == 420
+
+
+def test_store_float(common_mock):
+    common_mock.number = 42.25
+
+    assert common_mock.number == 42.25
