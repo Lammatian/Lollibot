@@ -1,6 +1,6 @@
 # config.py: adjust constants
 
-DEBUG = True
+DEBUG = False
 motor_ports = ('outA', 'outB')
 color_sensor_port = 'in1'
 speed = 800
