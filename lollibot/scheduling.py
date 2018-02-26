@@ -25,6 +25,9 @@ class Scheduler(object):
     def get_schedule(self, date: date) -> list:
         return config.get(self.__config_key(date)) or []
 
+    def in_schedule_dt(self, datetime: datetime) -> bool:
+        return self.in_schedule(datetime.date(), datetime.time())
+
     def in_schedule(self, date: date, cur_time: time) -> bool:
         schedule = self.get_schedule(date)
 
