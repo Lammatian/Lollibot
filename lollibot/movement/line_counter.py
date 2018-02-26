@@ -32,7 +32,7 @@ class LineCounter(object):
 
         values = self.previous_inputs[start_index:end_index]
 
-        most_common = sum(values) > (config.INE_COUNTER_SMOOTHING_FACTOR / 2)
+        most_common = sum(values) > (config.LINE_COUNTER_SMOOTHING_FACTOR / 2)
 
         return most_common
 

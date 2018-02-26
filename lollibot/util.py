@@ -1,10 +1,8 @@
 # some utility functions
 
 import logging
-import os
-import sys
 
-import config
+from lollibot.config import config
 
 def bail_if_not_debug(message: str = '') -> None:
     """Crash with a user provided message if we
@@ -15,6 +13,3 @@ def bail_if_not_debug(message: str = '') -> None:
 
     logging.warning(message)
 
-
-def app_path():
-    return os.path.dirname(os.path.realpath(sys.argv[0]))

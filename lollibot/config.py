@@ -1,8 +1,12 @@
 import configparser
 import os
 import json
+import sys
 
-import lollibot.util as util
+
+def app_path():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
 
 USER_CONFIG_LOCATION = os.path.expanduser("~/.lollibot/lollibot.cfg")
 DEFAULT_SECTION_HEADING = "DEFAULT"
@@ -17,7 +21,7 @@ class Config(object):
         self.reload()
 
     def reload(self):
-        self.config.read([os.path.join(util.app_path(), "config/default.cfg"), "/etc/lollibot/lollibot.cfg", USER_CONFIG_LOCATION])
+        self.config.read([os.path.join(os.getcwd(), "config/default.cfg"), "/etc/lollibot/lollibot.cfg", USER_CONFIG_LOCATION])
 
     def write(self):
         os.makedirs(os.path.dirname(USER_CONFIG_LOCATION), exist_ok=True)

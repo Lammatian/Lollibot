@@ -3,7 +3,6 @@ import ev3dev.ev3 as ev3
 from lollibot.config import config
 from lollibot.util import *
 
-
 class MainMotors(object):
 
     def __init__(self):
