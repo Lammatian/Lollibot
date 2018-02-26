@@ -3,6 +3,8 @@ import lollibot.ev3.line_color_sensor as line_color_sensor
 import lollibot.ev3.main_motors as main_motors
 import time
 
+from lollibot.config import config
+
 
 class MovementControl(object):
 
@@ -22,6 +24,7 @@ class MovementControl(object):
             time.sleep(0)
             sensor_value = self.color_sensor.value()
             self.lc.register_input(sensor_value)
-            print("{} {}".format(sensor_value, self.lc.count_lines()))
+            if config.DEBUG:
+                print("Sensor value: {}, lines: {}".format(sensor_value, self.lc.count_lines()))
 
         self.main_motors.stop()
