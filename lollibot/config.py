@@ -1,12 +1,6 @@
 import configparser
 import os
 import json
-import sys
-
-
-def app_path():
-    return os.path.dirname(os.path.realpath(sys.argv[0]))
-
 
 USER_CONFIG_LOCATION = os.path.expanduser("~/.lollibot/lollibot.cfg")
 DEFAULT_SECTION_HEADING = "DEFAULT"
