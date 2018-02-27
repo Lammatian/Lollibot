@@ -13,7 +13,7 @@ if __name__ == '__main__':
     while True:
         cur_datetime = datetime.now()
 
-        if scheduler.in_schedule_dt(cur_datetime):
+        if True:
             mc = movement_control.MovementControl()
             mc.move_lines(4, 0.25)
 
