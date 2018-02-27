@@ -9,6 +9,8 @@ import sys
 from datetime import datetime
 import _thread
 
+from lollibot.config import config
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
@@ -32,8 +34,11 @@ except:
 bc = BluetoothCommunicator(UUID, logger)
 bc.connect()
 
+should_move_road = False
+
 
 def bluetooth_listener(threadName, delay):
+    global should_move_road
     while True:
         sleep(delay)
 
@@ -45,8 +50,8 @@ def bluetooth_listener(threadName, delay):
             command, argument = parsed_data
 
             if command == "mvl":
-                mc = movement_control.MovementControl()
-                mc.move_lines(int(argument))
+                config.middle_line_count = int(argument)
+                should_move_road = True
             elif command == "btr":
                 with open(BATTERY_PATH) as f:
                     voltage = f.read()
@@ -68,13 +73,20 @@ def bluetooth_listener(threadName, delay):
 
 
 def robot_manager(threadName, delay):
+    global should_move_road
+
     while True:
-        if scheduler.in_schedule_dt(datetime.now()):
-            mc.move_lines(1)
-            logger.info("Moving")
-        else:
-            logger.info("Not in schedule")
-        sleep(delay)
+        if should_move_road:
+            should_move_road = False
+            mc = movement_control.MovementControl()
+            direction = 1
+            line_count = config.middle_line_count
+
+            if line_count < 0:
+                direction *= -1
+                line_count *= -1
+
+            mc.move_lines(line_count, direction*0.15)
 
 
 try:
@@ -85,3 +97,4 @@ except:
 
 while True:
     pass
+

@@ -16,6 +16,8 @@ class MovementControl(object):
     def move_lines(self, line_count, direction=1):
         self.lc.reset()
 
+        print("Moving {} lines at {} speed".format(line_count, direction))
+
         sensor_value = self.color_sensor.value()
         self.lc.register_input(sensor_value)
 
