@@ -22,7 +22,7 @@ logger.addHandler(handler)
 
 BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-battery/voltage_now"
 UUID = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
-DIRECTION = 0.25
+DIRECTION = 0.15
 scheduler = Scheduler()
 
 try:
@@ -73,7 +73,7 @@ def robot_manager(threadName, delay):
     while True:
         if scheduler.in_schedule_dt(datetime.now()):
             if mc:
-                mc.move_lines(1, DIRECTION)
+                mc.move_lines(3, DIRECTION)
                 DIRECTION *= -1
             logger.info("Moving")
         else:
