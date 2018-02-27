@@ -22,12 +22,13 @@ logger.addHandler(handler)
 
 BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-battery/voltage_now"
 UUID = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
+DIRECTION = 0.25
 scheduler = Scheduler()
 
 try:
     mc = movement_control.MovementControl()
 except:
-    pass
+    mc = None
 
 bc = BluetoothCommunicator(UUID, logger)
 bc.connect()
@@ -68,9 +69,12 @@ def bluetooth_listener(threadName, delay):
 
 
 def robot_manager(threadName, delay):
+    global DIRECTION
     while True:
         if scheduler.in_schedule_dt(datetime.now()):
-            mc.move_lines(1)
+            if mc:
+                mc.move_lines(1, DIRECTION)
+                DIRECTION *= -1
             logger.info("Moving")
         else:
             logger.info("Not in schedule")
