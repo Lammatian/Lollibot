@@ -9,6 +9,7 @@ from datetime import datetime
 if __name__ == '__main__':
 
     scheduler = scheduling.Scheduler()
+    scheduler.set_schedule(datetime.now().date(), ["00:00:00-23:59:59"])
 
     while True:
         cur_datetime = datetime.now()
