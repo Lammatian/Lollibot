@@ -8,6 +8,7 @@ import logging
 import sys
 from datetime import datetime
 import _thread
+from lollibot.config import config
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -22,7 +23,8 @@ logger.addHandler(handler)
 
 BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-battery/voltage_now"
 UUID = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
-DIRECTION = 0.15
+DIRECTION = 0.2
+should_move_road = False
 scheduler = Scheduler()
 
 try:
@@ -35,6 +37,8 @@ bc.connect()
 
 
 def bluetooth_listener(threadName, delay):
+    global should_move_road
+
     while True:
         sleep(delay)
 
@@ -46,8 +50,8 @@ def bluetooth_listener(threadName, delay):
             command, argument = parsed_data
 
             if command == "mvl":
-                mc = movement_control.MovementControl()
-                mc.move_lines(int(argument))
+                config.middle_line_count = int(argument)
+                should_move_road = True
             elif command == "btr":
                 with open(BATTERY_PATH) as f:
                     voltage = f.read()
@@ -69,15 +73,28 @@ def bluetooth_listener(threadName, delay):
 
 
 def robot_manager(threadName, delay):
-    global DIRECTION
+    global DIRECTION, should_move_road
     while True:
         if scheduler.in_schedule_dt(datetime.now()):
             if mc:
                 mc.move_lines(3, DIRECTION)
                 DIRECTION *= -1
-            logger.info("Moving")
+            logger.info("Scheduled moving")
+        elif should_move_road:
+            logger.info("Forced moving")
+            should_move_road = False
+            movcon = movement_control.MovementControl()
+            direction = 0.2
+            line_count = config.middle_line_count
+
+            if line_count < 0:
+                direction *= -1
+                line_count *= -1
+
+            movcon.move_lines(line_count, direction)
         else:
             logger.info("Not in schedule")
+
         sleep(delay)
 
 
