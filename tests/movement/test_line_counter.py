@@ -26,7 +26,7 @@ def test_smooth():
     input_measurements(lc, 8, 30, 50)
     assert lc.last_value() == False
 
-    input_measurements(lc, 2, 350, 400)
+    input_measurements(lc, 1, 350, 400)
     assert lc.last_value() == False
 
     input_measurements(lc, 1, 60, 80)
@@ -77,3 +77,20 @@ def test_reset():
     input_measurements(lc, 8, 80, 100)  # black
 
     assert lc.count_lines() == 1
+
+
+TRACE_BASE_PATH = "tests/movement/traces"
+
+
+@pytest.mark.parametrize('lines', range(1, 5))
+@pytest.mark.parametrize('delay', [0, 0.001, 0.002, 0.005, 0.01, 0.015, 0.02])
+@pytest.mark.parametrize('direction', ['forward', 'back'])
+def test_trace(lines, delay, direction):
+    lc = LineCounter()
+
+    with open("{}/measurement-{}-{}-{}.txt".format(TRACE_BASE_PATH, lines, delay, direction), 'r') as f:
+        for line in f:
+            measurement = int(line)
+            lc.register_input(measurement)
+
+    assert lc.count_lines() == lines
