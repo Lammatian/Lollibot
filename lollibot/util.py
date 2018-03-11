@@ -2,7 +2,7 @@
 
 import logging
 
-import config
+from lollibot.config import config
 
 def bail_if_not_debug(message: str = '') -> None:
     """Crash with a user provided message if we
@@ -12,3 +12,4 @@ def bail_if_not_debug(message: str = '') -> None:
         exit(message)
 
     logging.warning(message)
+

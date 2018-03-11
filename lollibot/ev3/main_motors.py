@@ -1,8 +1,7 @@
 import logging
 import ev3dev.ev3 as ev3
-import config
+from lollibot.config import config
 from lollibot.util import *
-
 
 class MainMotors(object):
 
