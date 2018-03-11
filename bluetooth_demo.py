@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
-from lollibot.bluetooth_comms import BluetoothCommunicator
+import lollibot.bluetooth_comms as bluetooth
 from lollibot.data_parser import parse_data, parse_timedate
-from lollibot.scheduling import Scheduler
+import lollibot.scheduling as scheduling
 import lollibot.movement.movement_control as movement_control
 from time import sleep
 import logging
 import sys
 from datetime import datetime
-import _thread
+from threading import Thread
 from lollibot.config import config
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,21 +22,15 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-battery/voltage_now"
-UUID = "94f39d29-7d6d-437d-973b-fba39e49d4ee"
-DIRECTION = 0.2
+automatic_direction = config.relative_speed
 should_move_road = False
-scheduler = Scheduler()
+scheduler = scheduling.Scheduler()
 
-try:
-    mc = movement_control.MovementControl()
-except:
-    mc = None
-
-bc = BluetoothCommunicator(UUID, logger)
+bc = bluetooth.BluetoothCommunicator(config.uuid, logger)
 bc.connect()
 
 
-def bluetooth_listener(threadName, delay):
+def bluetooth_listener(delay):
     global should_move_road
 
     while True:
@@ -72,37 +66,46 @@ def bluetooth_listener(threadName, delay):
                 continue
 
 
-def robot_manager(threadName, delay):
-    global DIRECTION, should_move_road
+def robot_manager(delay):
+    global automatic_direction, should_move_road
     while True:
         if scheduler.in_schedule_dt(datetime.now()):
-            if mc:
-                mc.move_lines(3, DIRECTION)
-                DIRECTION *= -1
-            logger.info("Scheduled moving")
+            try:
+                mc = movement_control.MovementControl()
+                mc.move_lines(3, automatic_direction)
+                automatic_direction *= -1
+                logger.info("Scheduled moving")
+            except:
+                logger.info("Not moving due to an error")
+
         elif should_move_road:
             logger.info("Forced moving")
             should_move_road = False
-            movcon = movement_control.MovementControl()
-            direction = 0.2
+            mc = movement_control.MovementControl()
+
+            direction = config.relative_speed
             line_count = config.middle_line_count
 
             if line_count < 0:
                 direction *= -1
                 line_count *= -1
 
-            movcon.move_lines(line_count, direction)
+            mc.move_lines(line_count, direction)
         else:
             logger.info("Not in schedule")
 
         sleep(delay)
 
-
 try:
-    _thread.start_new_thread(bluetooth_listener, ("Bluetooth listener", 2,))
-    _thread.start_new_thread(robot_manager, ("Robot manager", 5))
-except:
-    print("Error: unable to start thread")
+    bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(2,))
+    robot_manager_thread = Thread(target=robot_manager, name="Robot manager", args=(5,))
 
-while True:
-    pass
+    bluetooth_thread.start()
+    robot_manager_thread.start()
+
+    bluetooth_thread.join()
+    robot_manager_thread.join()
+
+except Exception as e:
+    print("Error: unable to start thread: {}", e)
+    exit(1)

@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
+# pylint: skip-file
 import bluetooth as bt
 import logging
-import ev3dev.ev3 as ev3
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -13,10 +13,6 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 
 logger.addHandler(handler)
-
-# TODO:
-# Tests
-# Documentation
 
 class BluetoothCommunicator:
 
