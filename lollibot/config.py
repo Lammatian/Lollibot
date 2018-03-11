@@ -22,19 +22,25 @@ class Config(object):
         with open(USER_CONFIG_LOCATION, "w") as file:
             self.config.write(file)
 
-    def __getattr__(self, item):
+    def get(self, item):
         if item in self.config[DEFAULT_SECTION_HEADING]:
             return json.loads(self.config[DEFAULT_SECTION_HEADING][item])
 
         return None
 
-    def __setattr__(self, key, value):
+    def set(self, key, value):
         if DEFAULT_SECTION_HEADING not in self.config:
             self.config[DEFAULT_SECTION_HEADING] = {}
 
         self.config[DEFAULT_SECTION_HEADING][key] = json.dumps(value)
 
         self.write()
+
+    def __getattr__(self, item):
+        return self.get(item)
+
+    def __setattr__(self, key, value):
+        self.set(key, value)
 
 
 config = Config()
