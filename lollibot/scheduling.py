@@ -19,7 +19,7 @@ class Scheduler(object):
         config.set(self.__config_key(date), schedule)
 
     def delete_schedule(self, date: date) -> None:
-        # Cleaner than set_schedule(self, []), because cleans config
+        # Cleaner than set_schedule(self, []), because this cleans config file
         config.set(self.__config_key(date), None)
 
     def get_schedule(self, date: date) -> list:
