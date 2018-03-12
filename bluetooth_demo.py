@@ -34,10 +34,12 @@ def bluetooth_listener(delay):
     global should_move_road
 
     while True:
+        if not bc.connected:
+            bc.connect()
+
         sleep(delay)
 
         data = bc.receive_data()
-
         parsed_data = parse_data(data)
 
         if parsed_data:
@@ -72,7 +74,7 @@ def robot_manager(delay):
         if scheduler.in_schedule_dt(datetime.now()):
             try:
                 mc = movement_control.MovementControl()
-                mc.move_lines(3, automatic_direction)
+                mc.move_lines(config.middle_line_count, automatic_direction)
                 automatic_direction *= -1
                 logger.info("Scheduled moving")
             except:
@@ -95,6 +97,7 @@ def robot_manager(delay):
             logger.info("Not in schedule")
 
         sleep(delay)
+
 
 try:
     bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(2,))

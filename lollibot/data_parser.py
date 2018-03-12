@@ -21,6 +21,9 @@ date_pattern = re.compile(r"^<(../../....)\|(\|(.*:.*-.*:.*))*>$")
 
 def is_data_valid(data):
     logger.debug("Checking validity of {}".format(data))
+    if not data:
+        return False
+
     return re.match(command_pattern, data) and data[1:4] in commands
 
 

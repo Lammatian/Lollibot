@@ -14,6 +14,7 @@ handler.setFormatter(formatter)
 
 logger.addHandler(handler)
 
+
 class BluetoothCommunicator:
 
     def __init__(self, uuid, log=None):
@@ -25,50 +26,60 @@ class BluetoothCommunicator:
         self.server_sock = bt.BluetoothSocket(bt.RFCOMM)
         self.server_sock.bind(("", bt.PORT_ANY))
         self.server_sock.listen(1)
+        self.client_sock = None
+        self.client_info = None
 
         self.port = self.server_sock.getsockname()[1]
+        self.connected = False
 
         logger.info("Socket set up")
-
 
     def connect(self):
         logger.info("Advertising service")
 
         bt.advertise_service(self.server_sock,
-            "LollibotAppCommunicator",
-            service_id=self.uuid,
-            service_classes=[self.uuid, bt.SERIAL_PORT_CLASS],
-            profiles=[bt.SERIAL_PORT_PROFILE])
+                             "LollibotAppCommunicator",
+                             service_id=self.uuid,
+                             service_classes=[self.uuid, bt.SERIAL_PORT_CLASS],
+                             profiles=[bt.SERIAL_PORT_PROFILE])
 
         logger.info("Waiting for connection on RGCOMM port {}...".format(self.port))
 
         self.client_sock, self.client_info = self.server_sock.accept()
+        self.connected = True
 
         logger.info("Accepted connection from {}".format(self.client_info))
 
-    
     def disconnect(self):
         logger.info("Disconnecting...")
         self.client_sock.close()
         self.server_sock.close()
+        self.connected = False
         logger.info("Disconnected")
-
 
     def receive_data(self):
         logger.info("Receiving data")
-        data = self.client_sock.recv(1024)
+        try:
+            data = self.client_sock.recv(1024)
 
-        if not data:
-            logger.debug("No data found")
-            return
+            if not data:
+                logger.debug("No data found")
+                return None
 
-        decoded_data = data.decode("utf-8")
-        logger.debug("Received {}".format(decoded_data))
-        
-        return decoded_data
+            decoded_data = data.decode("utf-8")
+            logger.debug("Received {}".format(decoded_data))
 
-    
+            return decoded_data
+        except IOError:
+            logger.info("Device disconnected")
+            self.connected = False
+            return None
+
     def send_data(self, data):
         logger.debug("Sending {} to the client".format(data))
-        self.client_sock.send(data.encode())
-        logger.info("Data successfully sent")
+        try:
+            self.client_sock.send(data.encode())
+            logger.info("Data successfully sent")
+        except IOError:
+            logger.info("Device disconnected")
+            self.connected = False
