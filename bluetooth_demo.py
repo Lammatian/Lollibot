@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 import lollibot.bluetooth_comms as bluetooth
-from lollibot.data_parser import parse_data, parse_timedate
+from lollibot.data_parser import parse_data, parse_timedate, encode_data, encode_dates, parse_date
 import lollibot.scheduling as scheduling
 import lollibot.movement.movement_control as movement_control
 from time import sleep
@@ -34,16 +34,19 @@ def bluetooth_listener(delay):
     global should_move_road
 
     while True:
+        sleep(delay)
         if not bc.connected:
             bc.connect()
-
-        sleep(delay)
 
         data = bc.receive_data()
         parsed_data = parse_data(data)
 
+        logger.info("Parsed data: {}".format(parsed_data))
+
         if parsed_data:
             command, argument = parsed_data
+
+            logger.info("command: {}".format(command))
 
             if command == "mvl":
                 config.middle_line_count = int(argument)
@@ -59,6 +62,8 @@ def bluetooth_listener(delay):
                 date, times = parse_timedate(argument)
                 scheduler.set_schedule(date, times)
             elif command == "rms":
+                date = parse_date(argument)
+                scheduler.delete_schedule(date)
                 continue
             elif command == "snl":
                 continue
@@ -66,6 +71,18 @@ def bluetooth_listener(delay):
                 continue
             elif command == "mfm":
                 continue
+            elif command == "gts":
+                logger.info("Received gts!")
+                schedule = scheduler.get_all_schedules()
+                bc.send_data(encode_data("scs"))
+                logger.info("Sent start")
+                for d, s in schedule.items():
+                    encoded = encode_dates(d, s)
+                    logger.info(encoded)
+                    bc.send_data(encode_data("scd", encoded))
+
+                bc.send_data(encode_data("sce"))
+                logger.info("Sent end")
 
 
 def robot_manager(delay):

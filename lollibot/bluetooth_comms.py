@@ -32,16 +32,16 @@ class BluetoothCommunicator:
         self.port = self.server_sock.getsockname()[1]
         self.connected = False
 
-        logger.info("Socket set up")
-
-    def connect(self):
-        logger.info("Advertising service")
-
         bt.advertise_service(self.server_sock,
                              "LollibotAppCommunicator",
                              service_id=self.uuid,
                              service_classes=[self.uuid, bt.SERIAL_PORT_CLASS],
                              profiles=[bt.SERIAL_PORT_PROFILE])
+
+        logger.info("Socket set up")
+
+    def connect(self):
+        logger.info("Advertising service")
 
         logger.info("Waiting for connection on RGCOMM port {}...".format(self.port))
 
@@ -70,8 +70,8 @@ class BluetoothCommunicator:
             logger.debug("Received {}".format(decoded_data))
 
             return decoded_data
-        except IOError:
-            logger.info("Device disconnected")
+        except IOError as e:
+            logger.info("Device disconnected: {}".format(e))
             self.connected = False
             return None
 
@@ -80,6 +80,6 @@ class BluetoothCommunicator:
         try:
             self.client_sock.send(data.encode())
             logger.info("Data successfully sent")
-        except IOError:
-            logger.info("Device disconnected")
+        except IOError as e:
+            logger.info("Device disconnected: {}".format(e))
             self.connected = False

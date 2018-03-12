@@ -1,26 +1,11 @@
 import re
-from datetime import datetime
-import logging
-
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-handler = logging.FileHandler("bluetooth.log")
-handler.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-
-logger.addHandler(handler)
-
+from datetime import datetime, date, time
 
 command_pattern = re.compile(r"^\[(...)(\*(.*)\*)?\]$")
 date_pattern = re.compile(r"^<(../../....)\|(\|(.*:.*-.*:.*))*>$")
 
 
 def is_data_valid(data):
-    logger.debug("Checking validity of {}".format(data))
     if not data:
         return False
 
@@ -28,34 +13,40 @@ def is_data_valid(data):
 
 
 def parse_data(data):
-    logger.debug("Parsing {}".format(data))
 
     if not is_data_valid(data):
         return None
-    
-    logger.debug("Data is valid")
+
     command, argument = re.match(command_pattern, data).group(1), re.match(command_pattern, data).group(3)
 
     if commands[command] ^ bool(argument):
         return None
 
-    logger.debug("Arguments match the command")
-
     return command, argument
 
 
-def parse_timedate(timedate):
-    logging.debug("Parsing timedate {}".format(timedate))
+def parse_date(data):
+    return datetime.strptime(data, "%d/%m/%Y").date()
 
+
+def encode_data(command, data=None):
+    if data:
+        return "[{}*{}*]".format(command, data)
+    else:
+        return "[{}]".format(command)
+
+
+def encode_dates(date: date, times):
+    return "<{}||{}>".format(date.strftime("%d/%m/%Y"), "|".join(times))
+
+
+def parse_timedate(timedate):
     if not re.match(date_pattern, timedate):
         return
 
-    logging.debug("Timedate matches the pattern")
-
-    date, times = re.match(date_pattern, timedate).group(1), re.match(date_pattern, timedate).group(3)
+    date_str, times = re.match(date_pattern, timedate).group(1), re.match(date_pattern, timedate).group(3)
     times = times.split("|")
-    date = datetime.strptime(date, "%d/%m/%Y").date()
-    logging.debug("Finished parsing datetime: {}, {}".format(date, times))
+    date = parse_date(date_str)
 
     return date, times
 
@@ -68,5 +59,9 @@ commands = {
     "rms": True,
     "snl": True,
     "mtm": False,
-    "mfm": False
+    "mfm": False,
+    "gts": False,
+    "scs": False,
+    "sce": False,
+    "scd": True
 }

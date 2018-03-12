@@ -1,7 +1,9 @@
 from lollibot.config import config
 
 from datetime import date, time, datetime
+import re
 
+config_regex = re.compile("^SCHEDULE_(\d*-\d*-\d*)$", re.IGNORECASE)
 
 class Scheduler(object):
 
@@ -12,6 +14,11 @@ class Scheduler(object):
     def __config_key(date: date) -> str:
         return "SCHEDULE_{}".format(date)
 
+    @staticmethod
+    def __parse_key(date_str: str) -> date:
+        m = config_regex.match(date_str)
+        return datetime.strptime(m.group(1), "%Y-%m-%d").date()
+
     def __parse_time(self, time_str: str) -> time:
         return datetime.strptime(time_str, "%H:%M:%S").time()
 
@@ -20,10 +27,20 @@ class Scheduler(object):
 
     def delete_schedule(self, date: date) -> None:
         # Cleaner than set_schedule(self, []), because this cleans config file
-        config.set(self.__config_key(date), None)
+        config.remove(self.__config_key(date))
 
     def get_schedule(self, date: date) -> list:
         return config.get(self.__config_key(date)) or []
+
+    def get_all_schedules(self) -> dict:
+        keys = config.find_all(config_regex)
+
+        results = dict()
+        for k in keys:
+            d = self.__parse_key(k)
+            results[d] = self.get_schedule(d)
+
+        return results
 
     def in_schedule_dt(self, datetime: datetime) -> bool:
         return self.in_schedule(datetime.date(), datetime.time())

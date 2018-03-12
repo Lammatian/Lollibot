@@ -1,9 +1,10 @@
 import configparser
 import os
 import json
+import re
 
 USER_CONFIG_LOCATION = os.path.expanduser("~/.lollibot/lollibot.cfg")
-DEFAULT_SECTION_HEADING = "DEFAULT"
+DEFAULT_SECTION_HEADING = "LOLLIBOT"
 
 
 class Config(object):
@@ -15,6 +16,7 @@ class Config(object):
         self.reload()
 
     def reload(self):
+        self.config.clear()
         self.config.read([os.path.join(os.getcwd(), "config/default.cfg"), "/etc/lollibot/lollibot.cfg", USER_CONFIG_LOCATION])
 
     def write(self):
@@ -27,6 +29,12 @@ class Config(object):
             return json.loads(self.config[DEFAULT_SECTION_HEADING][item])
 
         return None
+
+    def remove(self, item):
+        return self.config.remove_option(DEFAULT_SECTION_HEADING, item)
+
+    def find_all(self, regex):
+        return [i for i in self.config[DEFAULT_SECTION_HEADING] if regex.match(i)]
 
     def set(self, key, value):
         if DEFAULT_SECTION_HEADING not in self.config:

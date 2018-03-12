@@ -1,6 +1,7 @@
 import pytest
 import importlib
 import unittest.mock as mock
+import re
 
 
 @pytest.fixture
@@ -54,3 +55,21 @@ def test_store_float(common_mock):
     common_mock.number = 42.25
 
     assert common_mock.number == 42.25
+
+
+def test_remove(common_mock):
+    common_mock.hello = 3
+    assert common_mock.get('hello') == 3
+
+    common_mock.remove('hello')
+    assert common_mock.hello == None
+    assert common_mock.get('hello') == None
+
+
+def test_find_all(common_mock):
+    common_mock.schedule_2018_03_11 = [1, 2, 3]
+    common_mock.schedule_2018_03_12 = [4, 5, 6]
+
+    regex = re.compile("^schedule_.*$")
+
+    assert common_mock.find_all(regex) == ["schedule_2018_03_11", "schedule_2018_03_12"]
