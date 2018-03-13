@@ -2,6 +2,7 @@
 # pylint: skip-file
 import bluetooth as bt
 import logging
+from lollibot.config import config
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -47,6 +48,8 @@ class BluetoothCommunicator:
 
         self.client_sock, self.client_info = self.server_sock.accept()
         self.connected = True
+        self.client_sock.settimeout(config.socket_timeout)
+        self.server_sock.settimeout(config.socket_timeout)
 
         logger.info("Accepted connection from {}".format(self.client_info))
 
@@ -70,6 +73,9 @@ class BluetoothCommunicator:
             logger.debug("Received {}".format(decoded_data))
 
             return decoded_data
+        except TimeoutError as e:
+            logger.info("Receive timed out: {}".format(e))
+            return None
         except IOError as e:
             logger.info("Device disconnected: {}".format(e))
             self.connected = False
@@ -80,6 +86,9 @@ class BluetoothCommunicator:
         try:
             self.client_sock.send(data.encode())
             logger.info("Data successfully sent")
+        except TimeoutError as e:
+            logger.info("Send timed out: {}".format(e))
+            return None
         except IOError as e:
             logger.info("Device disconnected: {}".format(e))
             self.connected = False

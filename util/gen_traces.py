@@ -10,8 +10,8 @@ from time import sleep
 if __name__ == '__main__':
     config.debug = True
 
-    for lines in [1, 2, 3, 4]:
-        for delay in [0, 0.001, 0.002, 0.005, 0.01, 0.015, 0.02]:
+    for lines in [4]:
+        for delay in [0, 0.001, 0.002, 0.005, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.0225]:
             config.measurement_delay = delay
             config.dump_measurements = True
 

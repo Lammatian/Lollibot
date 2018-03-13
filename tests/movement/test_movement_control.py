@@ -1,5 +1,6 @@
 import pytest
 from lollibot.movement.movement_control import MovementControl
+import datetime as dt
 
 @pytest.fixture()
 def standard_mock(mocker):
@@ -8,11 +9,14 @@ def standard_mock(mocker):
     patches['motors'] = mocker.patch('lollibot.ev3.main_motors.MainMotors').return_value
     patches['line_counter'] = mocker.patch('lollibot.movement.line_counter.LineCounter').return_value
     patches['line_color_sensor'] = mocker.patch('lollibot.ev3.line_color_sensor.LineColorSensor').return_value
+    patches['datetime'] = mocker.patch('lollibot.movement.movement_control.datetime')
+    patches['datetime'].now.return_value = dt.datetime(2018, 3, 13)
 
     return type('', (object,), patches)()
 
 
 def test_start_motors(standard_mock):
+    standard_mock.line_color_sensor.value.return_value = 0
     standard_mock.line_counter.count_lines.side_effect = range(0, 5)
 
     mc = MovementControl()
@@ -22,6 +26,7 @@ def test_start_motors(standard_mock):
 
 
 def test_stop_motors(standard_mock):
+    standard_mock.line_color_sensor.value.return_value = 0
     standard_mock.line_counter.count_lines.side_effect = range(0, 5)
 
     mc = MovementControl()

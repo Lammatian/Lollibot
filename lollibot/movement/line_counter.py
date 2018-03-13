@@ -14,9 +14,12 @@ class LineCounter(object):
     def calibrate(self, white_input):
         self.max_input = white_input
 
-    def register_input(self, value):
+    def threshold(self, value):
         scaled_value = value / self.max_input
-        value_binary = scaled_value >= config.COLOR_SENSOR_WHITE_THRESHOLD
+        return scaled_value >= config.COLOR_SENSOR_WHITE_THRESHOLD
+
+    def register_input(self, value):
+        value_binary = self.threshold(value)
         self.previous_inputs.append(value_binary)
 
         last_value = self.__smoothed_input(len(self.previous_inputs) - 1)

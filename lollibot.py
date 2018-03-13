@@ -9,6 +9,7 @@ import sys
 from datetime import datetime
 from threading import Thread
 from lollibot.config import config
+import lollibot.movement.stuck_exception as stuck_exception
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -22,21 +23,29 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-battery/voltage_now"
-automatic_direction = config.relative_speed
+speed = config.relative_speed
 should_move_road = False
+stuck = False
 scheduler = scheduling.Scheduler()
+commands_to_send = []
 
 bc = bluetooth.BluetoothCommunicator(config.uuid, logger)
-bc.connect()
 
 
 def bluetooth_listener(delay):
-    global should_move_road
+    global should_move_road, commands_to_send
 
     while True:
         sleep(delay)
-        if not bc.connected:
-            bc.connect()
+        try:
+            if not bc.connected:
+                bc.connect()
+        except:
+            continue
+
+        while commands_to_send:
+            c = commands_to_send.pop()
+            bc.send_data(encode_data(c))
 
         data = bc.receive_data()
         parsed_data = parse_data(data)
@@ -53,7 +62,7 @@ def bluetooth_listener(delay):
                 should_move_road = True
             elif command == "btr":
                 with open(BATTERY_PATH) as f:
-                    voltage = f.read()
+                    voltage = f.read().strip()
 
                 bc.send_data(encode_data("bsu", voltage))
             elif command == "sts":
@@ -86,20 +95,31 @@ def bluetooth_listener(delay):
 
 
 def robot_manager(delay):
-    global automatic_direction, should_move_road
+    global speed, should_move_road, stuck, commands_to_send
     while True:
-        if scheduler.in_schedule_dt(datetime.now()):
+        if not stuck and scheduler.in_schedule_dt(datetime.now()):
             try:
                 mc = movement_control.MovementControl()
-                mc.move_lines(config.middle_line_count, automatic_direction)
-                automatic_direction *= -1
+                mc.move_lines(config.middle_line_count, speed)
+
+                sleep(5)
+
+                mc.move_lines(config.middle_line_count, -speed)
+
+                sleep(5)
+
                 logger.info("Scheduled moving")
+            except stuck_exception.StuckException:
+                stuck = True
+                commands_to_send.append('wng')
+                logger.info("Stuck on the road")
             except:
                 logger.info("Not moving due to an error")
 
         elif should_move_road:
             logger.info("Forced moving")
             should_move_road = False
+            stuck = False
             mc = movement_control.MovementControl()
 
             direction = config.relative_speed
@@ -109,7 +129,12 @@ def robot_manager(delay):
                 direction *= -1
                 line_count *= -1
 
-            mc.move_lines(line_count, direction)
+            try:
+                mc.move_lines(line_count, direction)
+            except stuck_exception.StuckException:
+                stuck = True
+                commands_to_send.append('wng')
+                logger.info("Stuck on the road")
         else:
             logger.info("Not in schedule")
 
