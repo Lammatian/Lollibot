@@ -111,11 +111,11 @@ def robot_manager(delay):
                 ######################
 
                 # This code is definitely untested (because motors were used for battery test)
-                #sm = sign_motors.SignMotors()
-                #sm.move_angle(270, 0.2)
-                #sleep(15)
-                #sm.move_angle(-270, 0.2)
-                #sleep(10)
+                sm = sign_motors.SignMotors()
+                sm.move_angle(300, 0.2)
+                sleep(3)
+                sm.move_angle(-300, 0.2)
+                sleep(3)
 
                 mc.move_lines(config.middle_line_count, -speed)
 
