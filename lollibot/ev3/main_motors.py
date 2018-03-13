@@ -14,7 +14,7 @@ class MainMotors(object):
                                 .format(m))
                 bail_if_not_debug('A motor was not connected')
 
-    def move(self, direction: int) -> None:
+    def move(self, direction: float) -> None:
         """
         Moves the robot continuously until stopped
         """

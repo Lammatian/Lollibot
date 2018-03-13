@@ -8,12 +8,14 @@ from lollibot.config import config
 from time import sleep
 
 if __name__ == '__main__':
-    config.debug = True
+    config.debug = False
 
     for lines in [4]:
         for delay in [0, 0.001, 0.002, 0.005, 0.01, 0.0125, 0.015, 0.0175, 0.02, 0.0225]:
             config.measurement_delay = delay
-            config.dump_measurements = True
+            config.dump_measurements = False
+
+            print("Delay: {}".format(delay))
 
             mc = movement_control.MovementControl()
             mc.move_lines(lines, 0.25)

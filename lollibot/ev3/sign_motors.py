@@ -3,10 +3,10 @@ import ev3dev.ev3 as ev3
 from lollibot.config import config
 from lollibot.util import *
 
-class MainMotors(object):
+class SignMotors(object):
 
     def __init__(self):
-        self.motors = [ev3.LargeMotor(port) for port in config.motor_ports]
+        self.motors = [ev3.LargeMotor(port) for port in config.sign_motor_ports]
 
         for m in self.motors:
             if not m.connected:
@@ -14,23 +14,19 @@ class MainMotors(object):
                                 .format(m))
                 bail_if_not_debug('A motor was not connected')
 
-    def move(self, direction: int) -> None:
+    def move_angle(self, angle: float, direction: float) -> None:
         """
-        Moves the robot continuously until stopped
-        """
-        speed = direction * config.speed
-        for m in self.motors:
-            m.run_forever(speed_sp=speed)
-
-    def move_distance(self, distance: float, speed_mod: float) -> None:
-        """Move the robot distance metres along a straight line
-        Note that distance can be negative to go backwards
+        Move the motors a certain angle
         """
 
-        speed = speed_mod * config.speed
-        time = config.seconds_per_metre * abs(distance) / abs(speed_mod)
+        if direction < 0:
+            angle *= -1
+            direction *= -1
+
+        speed = config.speed * direction
+
         for m in self.motors:
-            m.run_timed(speed_sp=speed, time_sp=time)
+            m.run_to_rel_pos(speed_sp=speed, position_sp=angle, stop_action='hold')
 
     def stop(self) -> None:
         """Stops the robot"""

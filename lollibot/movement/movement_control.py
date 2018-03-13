@@ -39,7 +39,7 @@ class MovementControl(object):
                 start_time = current_time
                 old_value = new_value
 
-            if (current_time - start_time).total_seconds() > config.time_per_line:
+            if (current_time - start_time).total_seconds() > config.time_per_line and config.detect_stuck:
                 self.main_motors.stop()
                 raise stuck_exception.StuckException()
 

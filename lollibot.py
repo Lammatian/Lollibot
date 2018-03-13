@@ -3,6 +3,7 @@ import lollibot.bluetooth_comms as bluetooth
 from lollibot.data_parser import parse_data, parse_timedate, encode_data, encode_dates, parse_date
 import lollibot.scheduling as scheduling
 import lollibot.movement.movement_control as movement_control
+import lollibot.ev3.sign_motors as sign_motors
 from time import sleep
 import logging
 import sys
@@ -26,6 +27,7 @@ BATTERY_PATH = "/sys/devices/platform/legoev3-battery/power_supply/legoev3-batte
 speed = config.relative_speed
 should_move_road = False
 stuck = False
+lines_to_move = 0
 scheduler = scheduling.Scheduler()
 commands_to_send = []
 
@@ -33,7 +35,7 @@ bc = bluetooth.BluetoothCommunicator(config.uuid, logger)
 
 
 def bluetooth_listener(delay):
-    global should_move_road, commands_to_send
+    global should_move_road, commands_to_send, lines_to_move
 
     while True:
         sleep(delay)
@@ -58,7 +60,7 @@ def bluetooth_listener(delay):
             logger.info("command: {}".format(command))
 
             if command == "mvl":
-                config.middle_line_count = int(argument)
+                lines_to_move = int(argument)
                 should_move_road = True
             elif command == "btr":
                 with open(BATTERY_PATH) as f:
@@ -95,7 +97,7 @@ def bluetooth_listener(delay):
 
 
 def robot_manager(delay):
-    global speed, should_move_road, stuck, commands_to_send
+    global speed, should_move_road, stuck, commands_to_send, lines_to_move
     while True:
         if not stuck and scheduler.in_schedule_dt(datetime.now()):
             try:
@@ -103,6 +105,17 @@ def robot_manager(delay):
                 mc.move_lines(config.middle_line_count, speed)
 
                 sleep(5)
+
+                ######################
+                # PUT SIGN CODE HERE #
+                ######################
+
+                # This code is definitely untested (because motors were used for battery test)
+                #sm = sign_motors.SignMotors()
+                #sm.move_angle(270, 0.2)
+                #sleep(15)
+                #sm.move_angle(-270, 0.2)
+                #sleep(10)
 
                 mc.move_lines(config.middle_line_count, -speed)
 
@@ -123,14 +136,13 @@ def robot_manager(delay):
             mc = movement_control.MovementControl()
 
             direction = config.relative_speed
-            line_count = config.middle_line_count
 
-            if line_count < 0:
+            if lines_to_move < 0:
                 direction *= -1
-                line_count *= -1
+                lines_to_move *= -1
 
             try:
-                mc.move_lines(line_count, direction)
+                mc.move_lines(lines_to_move, direction)
             except stuck_exception.StuckException:
                 stuck = True
                 commands_to_send.append('wng')
