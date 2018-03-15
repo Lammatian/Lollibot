@@ -12,7 +12,7 @@ class Scheduler(object):
 
     @staticmethod
     def __config_key(date: date) -> str:
-        return "SCHEDULE_{}".format(date)
+        return "schedule_{}".format(date.strftime("%Y-%m-%d"))
 
     @staticmethod
     def __parse_key(date_str: str) -> date:

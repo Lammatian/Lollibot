@@ -31,7 +31,8 @@ class Config(object):
         return None
 
     def remove(self, item):
-        return self.config.remove_option(DEFAULT_SECTION_HEADING, item)
+        self.config.remove_option(DEFAULT_SECTION_HEADING, item)
+        self.write()
 
     def find_all(self, regex):
         return [i for i in self.config[DEFAULT_SECTION_HEADING] if regex.match(i)]

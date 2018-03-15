@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import lollibot.bluetooth_comms as bluetooth
+import lollibot.bluetooth_comms as btc
 from lollibot.data_parser import parse_data, parse_timedate, encode_data, encode_dates, parse_date
 import lollibot.scheduling as scheduling
 import lollibot.movement.movement_control as movement_control
@@ -31,7 +31,7 @@ lines_to_move = 0
 scheduler = scheduling.Scheduler()
 commands_to_send = []
 
-bc = bluetooth.BluetoothCommunicator(config.uuid, logger)
+bc = btc.BluetoothCommunicator(config.uuid, logger)
 
 
 def bluetooth_listener(delay):
@@ -41,6 +41,7 @@ def bluetooth_listener(delay):
         sleep(delay)
         try:
             if not bc.connected:
+                logger.info("Device not connected, trying to connect")
                 bc.connect()
         except:
             continue
@@ -112,9 +113,9 @@ def robot_manager(delay):
 
                 # This code is definitely untested (because motors were used for battery test)
                 sm = sign_motors.SignMotors()
-                sm.move_angle(300, 0.2)
-                sleep(3)
-                sm.move_angle(-300, 0.2)
+                sm.move_angle(270, 0.15)
+                sleep(20)
+                sm.move_angle(-270, 0.15)
                 sleep(3)
 
                 mc.move_lines(config.middle_line_count, -speed)
@@ -124,7 +125,7 @@ def robot_manager(delay):
                 logger.info("Scheduled moving")
             except stuck_exception.StuckException:
                 stuck = True
-                commands_to_send.append('wng')
+                commands_to_send.append('wng*Stuck on the road*')
                 logger.info("Stuck on the road")
             except:
                 logger.info("Not moving due to an error")

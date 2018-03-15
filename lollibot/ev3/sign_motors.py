@@ -15,6 +15,7 @@ class SignMotors(object):
                                 .format(m))
                 bail_if_not_debug('A motor was not connected')
 
+
     def move_angle(self, angle: float, direction: float) -> None:
         """
         Move the motors a certain angle
@@ -28,6 +29,8 @@ class SignMotors(object):
 
         for m in self.motors:
             m.run_to_rel_pos(speed_sp=speed, position_sp=angle)
+            speed *= -1
+
 
     def stop(self) -> None:
         """Stops the robot"""
