@@ -14,7 +14,7 @@ if __name__ == '__main__':
         parser.add_argument("--{}".format(p), dest=p, type=json.loads, help="Default: {}".format(json.dumps(config.get(p))))
 
     args = vars(parser.parse_args())
-    show_help = all(v is not None for v in args.values())
+    show_help = all(v is None for v in args.values())
     if show_help:
         parser.print_help()
         exit(1)
