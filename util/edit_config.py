@@ -14,8 +14,12 @@ if __name__ == '__main__':
         parser.add_argument("--{}".format(p), dest=p, type=json.loads, help="Default: {}".format(json.dumps(config.get(p))))
 
     args = vars(parser.parse_args())
+    show_help = all(not v for v in args.values())
+    if show_help:
+        parser.print_help()
+        exit(1)
+
     for k, v in args.items():
         if v is not None:
             print("{}={}".format(k, v))
             config.set(k, v)
-
