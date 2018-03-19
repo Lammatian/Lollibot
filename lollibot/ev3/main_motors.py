@@ -14,7 +14,7 @@ class MainMotors(object):
                                 .format(m))
                 bail_if_not_debug('A motor was not connected')
 
-    def move(self, direction: int) -> None:
+    def move(self, direction: float) -> None:
         """
         Moves the robot continuously until stopped
         """
@@ -22,14 +22,13 @@ class MainMotors(object):
         for m in self.motors:
             m.run_forever(speed_sp=speed)
 
-    def move_distance(self, distance: float) -> None:
+    def move_distance(self, distance: float, speed_mod: float) -> None:
         """Move the robot distance metres along a straight line
         Note that distance can be negative to go backwards
         """
 
-        reverse = distance < 0
-        speed = -config.speed if reverse else config.speed
-        time = config.seconds_per_metre * abs(distance)
+        speed = speed_mod * config.speed
+        time = config.seconds_per_metre * abs(distance) / abs(speed_mod)
         for m in self.motors:
             m.run_timed(speed_sp=speed, time_sp=time)
 

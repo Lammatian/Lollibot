@@ -8,28 +8,31 @@ from lollibot.config import config
 from time import sleep
 
 if __name__ == '__main__':
-    config.debug = True
+    config.debug = False
 
-    for lines in [1, 2, 3, 4]:
-        for delay in [0, 0.001, 0.002, 0.005, 0.01, 0.015, 0.02]:
-            config.measurement_delay = delay
-            config.dump_measurements = True
+    for i in range(1000):
+        for lines in [4]:
+            for delay in [0]:
+                config.measurement_delay = delay
+                config.dump_measurements = False
 
-            mc = movement_control.MovementControl()
-            mc.move_lines(lines, 0.25)
+                print("Delay: {}".format(delay))
 
-            with open("/tmp/measurement-{}-{}-forward.txt".format(lines, delay), 'w') as f:
-                measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
-                f.write(measurement_str)
+                mc = movement_control.MovementControl()
+                mc.move_lines(lines, 0.25)
 
-            mc.raw_measurements = []
+                with open("/tmp/measurement-{}-{}-forward.txt".format(lines, delay), 'w') as f:
+                    measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
+                    f.write(measurement_str)
 
-            sleep(2)
+                mc.raw_measurements = []
 
-            mc.move_lines(lines, -0.25)
+                sleep(2)
 
-            with open("/tmp/measurement-{}-{}-back.txt".format(lines, delay), 'w') as f:
-                measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
-                f.write(measurement_str)
+                mc.move_lines(lines, -0.25)
 
-            sleep(2)
+                with open("/tmp/measurement-{}-{}-back.txt".format(lines, delay), 'w') as f:
+                    measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
+                    f.write(measurement_str)
+
+                sleep(2)
