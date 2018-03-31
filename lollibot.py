@@ -11,6 +11,7 @@ from datetime import datetime
 from threading import Thread
 from lollibot.config import config
 import lollibot.movement.stuck_exception as stuck_exception
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -35,7 +36,7 @@ bc = btc.BluetoothCommunicator(config.uuid, logger)
 
 
 def bluetooth_listener(delay):
-    global should_move_road, commands_to_send, lines_to_move
+    global should_move_road, commands_to_send, lines_to_move, stuck
 
     while True:
         sleep(delay)
@@ -63,6 +64,12 @@ def bluetooth_listener(delay):
             if command == "mvl":
                 lines_to_move = int(argument)
                 should_move_road = True
+            elif command == "rss":
+                should_move_road = False
+                stuck = False
+            elif command == "sdn":
+                print("Shutting down!")
+                os.system('echo maker | sudo -kS shutdown now')
             elif command == "btr":
                 with open(BATTERY_PATH) as f:
                     voltage = f.read().strip()
@@ -85,6 +92,8 @@ def bluetooth_listener(delay):
                 continue
             elif command == "gts":
                 logger.info("Received gts!")
+                print("Setting date to {}".format(argument))
+                os.system("echo maker | sudo -kS date -s '{}'".format(argument))
                 schedule = scheduler.get_all_schedules()
                 bc.send_data(encode_data("scs"))
                 logger.info("Sent start")
@@ -133,7 +142,6 @@ def robot_manager(delay):
         elif should_move_road:
             logger.info("Forced moving")
             should_move_road = False
-            stuck = False
             mc = movement_control.MovementControl()
 
             direction = config.relative_speed
@@ -143,6 +151,7 @@ def robot_manager(delay):
                 lines_to_move *= -1
 
             try:
+                print("Going to move lines!")
                 mc.move_lines(lines_to_move, direction)
             except stuck_exception.StuckException:
                 stuck = True

@@ -76,9 +76,10 @@ class BluetoothCommunicator:
         except TimeoutError as e:
             logger.info("Receive timed out: {}".format(e))
             return None
-        except IOError as e:
+        except bt.BluetoothError as e:
             logger.info("Device disconnected: {}".format(e))
-            #self.connected = False
+            if "timed out" not in e.__str__():
+                self.connected = False
             return None
 
     def send_data(self, data):
@@ -89,6 +90,7 @@ class BluetoothCommunicator:
         except TimeoutError as e:
             logger.info("Send timed out: {}".format(e))
             return None
-        except IOError as e:
+        except bt.BluetoothError as e:
             logger.info("Device disconnected: {}".format(e))
-            #self.connected = False
+            if "timed out" not in e.__str__():
+                self.connected = False

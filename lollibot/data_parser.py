@@ -60,8 +60,10 @@ commands = {
     "snl": True,
     "mtm": False,
     "mfm": False,
-    "gts": False,
+    "gts": True,
     "scs": False,
     "sce": False,
-    "scd": True
+    "scd": True,
+    "rss": False,
+    "sdn": False
 }
