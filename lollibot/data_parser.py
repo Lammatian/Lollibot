@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, date, time
 
-command_pattern = re.compile(r"^\[(.*)(\*(.*)\*)?\]$")
+command_pattern = re.compile(r"^\[(.*?)(\*(.*)\*)?\]$")
 date_pattern = re.compile(r"^<(../../....)\|(\|(.*:.*-.*:.*))*>$")
 
 
@@ -9,7 +9,7 @@ def is_data_valid(data):
     if not data:
         return False
 
-    return re.match(command_pattern, data) and data[1:4] in commands
+    return re.match(command_pattern, data)
 
 
 def parse_data(data):
@@ -18,6 +18,9 @@ def parse_data(data):
         return None
 
     command, argument = re.match(command_pattern, data).group(1), re.match(command_pattern, data).group(3)
+
+    if command not in commands:
+        return None
 
     if commands[command] ^ bool(argument):
         return None
@@ -74,5 +77,9 @@ commands = {
     "sce": False,
     "scd": True,
     "rss": False,
-    "sdn": False
+    "sdn": False,
+    "notsafe": False,
+    "safe": False,
+    "stuck": False,
+    "crossed": False
 }

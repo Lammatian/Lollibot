@@ -14,6 +14,12 @@ def test_encode_dates():
     assert encoded == expected
 
 
+def test_parse_ups():
+    data = "[ups*<01/04/2018||00:00:00-23:00:00>*]"
+    command = dp.parse_data(data)
+    assert command[0] == 'ups'
+
+
 def test_encode_data():
     encoded = dp.encode_data("sts", "123")
     expected = "[sts*123*]"

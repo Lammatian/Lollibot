@@ -52,7 +52,7 @@ def arduino_listener(delay):
 
         data = bl.receive_data()
         commands = list(parse_multiple_commands(data))
-        logger.info("Parsed commands from arduino: {}".format(commands))
+        #logger.info("Parsed commands from arduino: {}".format(commands))
 
         for command, _ in commands[-1:]:
             try:
@@ -83,7 +83,7 @@ def bluetooth_listener(delay):
 
         data = bc.receive_data()
         commands = list(parse_multiple_commands(data))
-        logger.info("Parsed commands: {}".format(commands))
+        #logger.info("Parsed commands: {}".format(commands))
 
         for parsed_data in commands:
 
@@ -139,7 +139,9 @@ def bluetooth_listener(delay):
         sleep(delay)
 
 
-def run_robot_loop(speed, road_state):
+def run_robot_loop(speed):
+    global road_state
+
     if road_state != RoadState.safe:
         logger.info("Not safe to cross")
         return
@@ -149,11 +151,18 @@ def run_robot_loop(speed, road_state):
 
     sleep(5)
 
+    logger.info("Arrived in the middle")
+
     sm = sign_motors.SignMotors()
     sm.move_angle(270, 0.15)
 
     while road_state != RoadState.crossed:
+        if should_move_road:
+            return #User requested an override, so don't wait on the arduino
+        logger.info("Road state is {}, so waiting".format(road_state))
         sleep(1)
+
+    logger.info("Moving back")
 
     sm.move_angle(-270, 0.15)
     sleep(3)
@@ -168,17 +177,7 @@ def run_robot_loop(speed, road_state):
 def robot_manager(delay):
     global speed, should_move_road, stuck, commands_to_send, lines_to_move, road_state
     while True:
-        if not stuck and scheduler.in_schedule_dt(datetime.now()):
-            try:
-                run_robot_loop(speed, road_state)
-            except stuck_exception.StuckException:
-                stuck = True
-                commands_to_send.append('wng*Stuck on the road*')
-                logger.info("Stuck on the road")
-            except:
-                logger.info("Not moving due to an error")
-
-        elif should_move_road:
+        if should_move_road:
             logger.info("Forced moving")
             should_move_road = False
             mc = movement_control.MovementControl()
@@ -196,6 +195,16 @@ def robot_manager(delay):
                 stuck = True
                 commands_to_send.append('wng*Stuck on the road*')
                 logger.info("Stuck on the road")
+        elif not stuck and scheduler.in_schedule_dt(datetime.now()):
+            try:
+                run_robot_loop(speed)
+            except stuck_exception.StuckException:
+                stuck = True
+                commands_to_send.append('wng*Stuck on the road*')
+                logger.info("Stuck on the road")
+            except:
+                logger.info("Not moving due to an error")
+
         else:
             logger.info("Not in schedule")
 
@@ -203,7 +212,7 @@ def robot_manager(delay):
 
 
 try:
-    bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(5,))
+    bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(1,))
     arduino_thread = Thread(target=arduino_listener, name="Arduino listener", args=(1,))
     robot_manager_thread = Thread(target=robot_manager, name="Robot manager", args=(5,))
 
