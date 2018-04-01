@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 import lollibot.bluetooth_comms as btc
-from lollibot.data_parser import parse_data, parse_timedate, encode_data, encode_dates, parse_date
+from lollibot.data_parser import parse_data, parse_timedate, encode_data, encode_dates, parse_date, parse_multiple_commands
 import lollibot.scheduling as scheduling
 import lollibot.movement.movement_control as movement_control
 import lollibot.ev3.sign_motors as sign_motors
@@ -33,6 +33,22 @@ scheduler = scheduling.Scheduler()
 commands_to_send = []
 
 bc = btc.BluetoothCommunicator(config.uuid, logger)
+bl = btc.BluetoothListener(config.arduino_uuid, config.arduino_addr)
+
+
+def arduino_listener(delay):
+    while True:
+        sleep(delay)
+        try:
+            if not bl.connected:
+                logger.info("Not connected to arduino, trying to connect")
+                bl.connect()
+                logger.info("Connected to arduino")
+        except:
+            continue
+
+        data = bl.receive_data()
+        logger.info('Received data from arduino: {}'.format(data))
 
 
 def bluetooth_listener(delay):
@@ -52,58 +68,59 @@ def bluetooth_listener(delay):
             bc.send_data(encode_data(c))
 
         data = bc.receive_data()
-        parsed_data = parse_data(data)
+        commands = list(parse_multiple_commands(data))
+        logger.info("Parsed commands: {}".format(commands))
 
-        logger.info("Parsed data: {}".format(parsed_data))
+        for parsed_data in commands:
 
-        if parsed_data:
-            command, argument = parsed_data
+            if parsed_data:
+                command, argument = parsed_data
 
-            logger.info("command: {}".format(command))
+                logger.info("command: {}".format(command))
 
-            if command == "mvl":
-                lines_to_move = int(argument)
-                should_move_road = True
-            elif command == "rss":
-                should_move_road = False
-                stuck = False
-            elif command == "sdn":
-                print("Shutting down!")
-                os.system('echo maker | sudo -kS shutdown now')
-            elif command == "btr":
-                with open(BATTERY_PATH) as f:
-                    voltage = f.read().strip()
+                if command == "mvl":
+                    lines_to_move = int(argument)
+                    should_move_road = True
+                elif command == "rss":
+                    should_move_road = False
+                    stuck = False
+                elif command == "sdn":
+                    print("Shutting down!")
+                    os.system('echo maker | sudo -kS shutdown now')
+                elif command == "btr":
+                    with open(BATTERY_PATH) as f:
+                        voltage = f.read().strip()
 
-                bc.send_data(encode_data("bsu", voltage))
-            elif command == "sts":
-                continue
-            elif command == "ups":
-                date, times = parse_timedate(argument)
-                scheduler.set_schedule(date, times)
-            elif command == "rms":
-                date = parse_date(argument)
-                scheduler.delete_schedule(date)
-                continue
-            elif command == "snl":
-                continue
-            elif command == "mtm":
-                continue
-            elif command == "mfm":
-                continue
-            elif command == "gts":
-                logger.info("Received gts!")
-                print("Setting date to {}".format(argument))
-                os.system("echo maker | sudo -kS date -s '{}'".format(argument))
-                schedule = scheduler.get_all_schedules()
-                bc.send_data(encode_data("scs"))
-                logger.info("Sent start")
-                for d, s in schedule.items():
-                    encoded = encode_dates(d, s)
-                    logger.info(encoded)
-                    bc.send_data(encode_data("scd", encoded))
+                    bc.send_data(encode_data("bsu", voltage))
+                elif command == "sts":
+                    continue
+                elif command == "ups":
+                    date, times = parse_timedate(argument)
+                    scheduler.set_schedule(date, times)
+                elif command == "rms":
+                    date = parse_date(argument)
+                    scheduler.delete_schedule(date)
+                    continue
+                elif command == "snl":
+                    continue
+                elif command == "mtm":
+                    continue
+                elif command == "mfm":
+                    continue
+                elif command == "gts":
+                    logger.info("Received gts!")
+                    print("Setting date to {}".format(argument))
+                    os.system("echo maker | sudo -kS date -s '{}'".format(argument))
+                    schedule = scheduler.get_all_schedules()
+                    bc.send_data(encode_data("scs"))
+                    logger.info("Sent start")
+                    for d, s in schedule.items():
+                        encoded = encode_dates(d, s)
+                        logger.info(encoded)
+                        bc.send_data(encode_data("scd", encoded))
 
-                bc.send_data(encode_data("sce"))
-                logger.info("Sent end")
+                    bc.send_data(encode_data("sce"))
+                    logger.info("Sent end")
 
 
 def robot_manager(delay):
@@ -155,7 +172,7 @@ def robot_manager(delay):
                 mc.move_lines(lines_to_move, direction)
             except stuck_exception.StuckException:
                 stuck = True
-                commands_to_send.append('wng')
+                commands_to_send.append('wng*Stuck on the road*')
                 logger.info("Stuck on the road")
         else:
             logger.info("Not in schedule")
@@ -164,13 +181,16 @@ def robot_manager(delay):
 
 
 try:
-    bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(2,))
+    bluetooth_thread = Thread(target=bluetooth_listener, name="Bluetooth listener", args=(5,))
+    arduino_thread = Thread(target=arduino_listener, name="Arduino listener", args=(1,))
     robot_manager_thread = Thread(target=robot_manager, name="Robot manager", args=(5,))
 
     bluetooth_thread.start()
+    arduino_thread.start()
     robot_manager_thread.start()
 
     bluetooth_thread.join()
+    arduino_thread.join()
     robot_manager_thread.join()
 
 except Exception as e:

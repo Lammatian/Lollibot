@@ -16,6 +16,82 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+class BluetoothListener:
+
+    def __init__(self, uuid, addr, log=None):
+        self.logger = log or logging.getLogger(__name__)
+        self.uuid = uuid
+        self.addr = addr
+
+        logger.info("Setting up bluetooth socket")
+
+        self.client_sock = bt.BluetoothSocket(bt.RFCOMM)
+
+        self.connected = False
+
+        logger.info("Socket set up")
+
+    def connect(self):
+        logger.info("Advertising service")
+
+        logger.info("Connecting to uuid: {}, addr: {}".format(self.uuid, self.addr))
+
+        service_matches = bt.find_service(uuid=self.uuid, address=self.addr)
+        if not service_matches:
+            self.connected = False
+            raise Exception("Could not find the device")
+
+        first_match = service_matches[0]
+        port = first_match['port']
+
+        self.client_sock.connect((self.addr, port))
+        self.connected = True
+        self.client_sock.settimeout(config.socket_timeout)
+
+        logger.info("Accepted connection from {}".format(self))
+
+    def disconnect(self):
+        logger.info("Disconnecting...")
+        self.client_sock.close()
+        self.connected = False
+        logger.info("Disconnected")
+
+    def receive_data(self):
+        logger.info("Receiving data")
+        try:
+            data = self.client_sock.recv(1024)
+
+            if not data:
+                logger.debug("No data found")
+                return None
+
+            decoded_data = data.decode("utf-8")
+            logger.debug("Received {}".format(decoded_data))
+
+            return decoded_data
+        except TimeoutError as e:
+            logger.info("Receive timed out: {}".format(e))
+            return None
+        except bt.BluetoothError as e:
+            logger.info("Device disconnected: {}".format(e))
+            if "timed out" not in e.__str__():
+                self.connected = False
+            return None
+
+    def send_data(self, data):
+        logger.debug("Sending {} to the client".format(data))
+        try:
+            self.client_sock.send(data.encode())
+            logger.info("Data successfully sent")
+        except TimeoutError as e:
+            logger.info("Send timed out: {}".format(e))
+            return None
+        except bt.BluetoothError as e:
+            logger.info("Device disconnected: {}".format(e))
+            if "timed out" not in e.__str__():
+                self.connected = False
+
+
 class BluetoothCommunicator:
 
     def __init__(self, uuid, log=None):

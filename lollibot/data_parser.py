@@ -25,6 +25,15 @@ def parse_data(data):
     return command, argument
 
 
+def parse_multiple_commands(data):
+    if not data:
+        return ()
+
+    commands_iterator = ('[' + a for a in data.split('[') if a)
+
+    return (parsed for parsed in (parse_data(d) for d in commands_iterator) if parsed)
+
+
 def parse_date(data):
     return datetime.strptime(data, "%d/%m/%Y").date()
 

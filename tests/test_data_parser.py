@@ -20,6 +20,14 @@ def test_encode_data():
     assert encoded == expected
 
 
+def test_parse_multiple_commands():
+    data = "[btr][btr][btr]"
+    commands = list(dp.parse_multiple_commands(data))
+
+    assert len(commands) == 3
+    assert all(c == "btr" for c, _ in commands)
+
+
 def test_encode_data_no_params():
     encoded = dp.encode_data("sts")
     expected = "[sts]"
