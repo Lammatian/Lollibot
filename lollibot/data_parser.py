@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, date, time
 
-command_pattern = re.compile(r"^\[(...)(\*(.*)\*)?\]$")
+command_pattern = re.compile(r"^\[(.*)(\*(.*)\*)?\]$")
 date_pattern = re.compile(r"^<(../../....)\|(\|(.*:.*-.*:.*))*>$")
 
 

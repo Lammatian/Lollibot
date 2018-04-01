@@ -12,6 +12,7 @@ from threading import Thread
 from lollibot.config import config
 import lollibot.movement.stuck_exception as stuck_exception
 import os
+from lollibot.road_state import RoadState
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -32,13 +33,15 @@ lines_to_move = 0
 scheduler = scheduling.Scheduler()
 commands_to_send = []
 
+road_state = RoadState.notsafe
+
 bc = btc.BluetoothCommunicator(config.uuid, logger)
 bl = btc.BluetoothListener(config.arduino_uuid, config.arduino_addr)
 
 
 def arduino_listener(delay):
+    global road_state, commands_to_send
     while True:
-        sleep(delay)
         try:
             if not bl.connected:
                 logger.info("Not connected to arduino, trying to connect")
@@ -48,14 +51,25 @@ def arduino_listener(delay):
             continue
 
         data = bl.receive_data()
-        logger.info('Received data from arduino: {}'.format(data))
+        commands = list(parse_multiple_commands(data))
+        logger.info("Parsed commands from arduino: {}".format(commands))
+
+        for command, _ in commands[-1:]:
+            try:
+                road_state = RoadState[command]
+                if road_state == RoadState.stuck:
+                    commands_to_send.append("wng*There's a stopped vehicle on the road*")
+            except KeyError:
+                road_state = RoadState.notsafe
+                logger.info("Received {}, don't know how to interpret that".format(command))
+
+        sleep(delay)
 
 
 def bluetooth_listener(delay):
     global should_move_road, commands_to_send, lines_to_move, stuck
 
     while True:
-        sleep(delay)
         try:
             if not bc.connected:
                 logger.info("Device not connected, trying to connect")
@@ -122,33 +136,41 @@ def bluetooth_listener(delay):
                     bc.send_data(encode_data("sce"))
                     logger.info("Sent end")
 
+        sleep(delay)
+
+
+def run_robot_loop(speed, road_state):
+    if road_state != RoadState.safe:
+        logger.info("Not safe to cross")
+        return
+
+    mc = movement_control.MovementControl()
+    mc.move_lines(config.middle_line_count, speed)
+
+    sleep(5)
+
+    sm = sign_motors.SignMotors()
+    sm.move_angle(270, 0.15)
+
+    while road_state != RoadState.crossed:
+        sleep(1)
+
+    sm.move_angle(-270, 0.15)
+    sleep(3)
+
+    mc.move_lines(config.middle_line_count, -speed)
+
+    sleep(5)
+
+    logger.info("Finished moving")
+
 
 def robot_manager(delay):
-    global speed, should_move_road, stuck, commands_to_send, lines_to_move
+    global speed, should_move_road, stuck, commands_to_send, lines_to_move, road_state
     while True:
         if not stuck and scheduler.in_schedule_dt(datetime.now()):
             try:
-                mc = movement_control.MovementControl()
-                mc.move_lines(config.middle_line_count, speed)
-
-                sleep(5)
-
-                ######################
-                # PUT SIGN CODE HERE #
-                ######################
-
-                # This code is definitely untested (because motors were used for battery test)
-                sm = sign_motors.SignMotors()
-                sm.move_angle(270, 0.15)
-                sleep(20)
-                sm.move_angle(-270, 0.15)
-                sleep(3)
-
-                mc.move_lines(config.middle_line_count, -speed)
-
-                sleep(5)
-
-                logger.info("Scheduled moving")
+                run_robot_loop(speed, road_state)
             except stuck_exception.StuckException:
                 stuck = True
                 commands_to_send.append('wng*Stuck on the road*')
