@@ -45,7 +45,8 @@ class MovementControl(object):
 
             if config.DEBUG:
                 print("Sensor value: {}, lines: {}".format(sensor_value, self.lc.count_lines()))
-                if config.dump_measurements:
-                    self.raw_measurements.append(sensor_value)
+
+            if config.dump_measurements:
+                self.raw_measurements.append(sensor_value)
 
         self.main_motors.stop()

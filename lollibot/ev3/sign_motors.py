@@ -27,9 +27,8 @@ class SignMotors(object):
 
         speed = config.speed * direction
 
-        for m in self.motors:
-            m.run_to_rel_pos(speed_sp=speed, position_sp=angle)
-            speed *= -1
+        for m, dir in zip(self.motors, config.sign_motor_direction):
+            m.run_to_rel_pos(speed_sp=speed, position_sp=angle*dir)
 
 
     def stop(self) -> None:

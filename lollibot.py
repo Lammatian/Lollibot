@@ -48,6 +48,7 @@ def arduino_listener(delay):
                 bl.connect()
                 logger.info("Connected to arduino")
         except:
+            sleep(delay)
             continue
 
         data = bl.receive_data()
@@ -75,6 +76,7 @@ def bluetooth_listener(delay):
                 logger.info("Device not connected, trying to connect")
                 bc.connect()
         except:
+            sleep(delay)
             continue
 
         while commands_to_send:
@@ -149,12 +151,14 @@ def run_robot_loop(speed):
     mc = movement_control.MovementControl()
     mc.move_lines(config.middle_line_count, speed)
 
-    sleep(5)
+    sleep(2)
 
     logger.info("Arrived in the middle")
 
     sm = sign_motors.SignMotors()
     sm.move_angle(270, 0.15)
+
+    sleep(3)
 
     while road_state != RoadState.crossed:
         if should_move_road:
