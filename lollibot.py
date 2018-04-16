@@ -53,13 +53,13 @@ def arduino_listener(delay):
 
         data = bl.receive_data()
         commands = list(parse_multiple_commands(data))
-        #logger.info("Parsed commands from arduino: {}".format(commands))
 
         for command, _ in commands[-1:]:
             try:
-                road_state = RoadState[command]
-                if road_state == RoadState.stuck:
+                if RoadState[command] == RoadState.stuck and road_state != RoadState.stuck:
                     commands_to_send.append("wng*There's a stopped vehicle on the road*")
+
+                road_state = RoadState[command]
             except KeyError:
                 road_state = RoadState.notsafe
                 logger.info("Received {}, don't know how to interpret that".format(command))
@@ -142,7 +142,7 @@ def bluetooth_listener(delay):
 
 
 def run_robot_loop(speed):
-    global road_state
+    global road_state, should_move_road
 
     if road_state != RoadState.safe:
         logger.info("Not safe to cross")

@@ -10,18 +10,18 @@ from time import sleep
 if __name__ == '__main__':
     config.debug = False
 
-    for i in range(1000):
+    for i in range(10):
         for lines in [4]:
             for delay in [0]:
                 config.measurement_delay = delay
-                config.dump_measurements = False
+                config.dump_measurements = True
 
                 print("Delay: {}".format(delay))
 
                 mc = movement_control.MovementControl()
-                mc.move_lines(lines, 0.25)
+                mc.move_lines(lines, 0.06)
 
-                with open("/tmp/measurement-{}-{}-forward.txt".format(lines, delay), 'w') as f:
+                with open("/tmp/measurement-{}-{}.txt".format(lines, delay), 'a') as f:
                     measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
                     f.write(measurement_str)
 
@@ -29,9 +29,9 @@ if __name__ == '__main__':
 
                 sleep(2)
 
-                mc.move_lines(lines, -0.25)
+                mc.move_lines(lines, -0.06)
 
-                with open("/tmp/measurement-{}-{}-back.txt".format(lines, delay), 'w') as f:
+                with open("/tmp/measurement-{}-{}.txt".format(lines, delay), 'a') as f:
                     measurement_str = "\n".join([str(i) for i in mc.raw_measurements])
                     f.write(measurement_str)
 
